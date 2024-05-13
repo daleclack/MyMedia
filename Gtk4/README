@@ -1,5 +1,3 @@
-# README of My Reminder
-This simple application is a reminder for the date, 
-and the window show the days left for the deadline set by user
+# README of My Media Player
 
-The reminded date and color of text can be changed by preferences dialog.
+This is a simple media player, which is build with Gtk 4 and json library by nlohmann.
