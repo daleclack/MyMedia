@@ -1,0 +1,97 @@
+# Temporary Files for Tesing
+*_testing*
+
+# Cmake Build Directory
+*/build/*
+*/build_mingw/*
+
+# Cache
+*/.cache/*
+*/.cache/clangd/index/*
+
+# clangd generated
+*.idx
+
+# Qt Build Directory
+build*
+
+#Visual Studio Build Directory
+*/Debug/*
+*/Release/*
+*/Testing/*
+
+#Binary Directory
+*/bin/*
+
+#cmake files for mingw
+*.cmake
+*.dir
+*.tcl
+*.ninja
+*.ninja_deps
+*.ninja_log
+*/CMakeFiles/*
+CMakeCache.txt
+Makefile
+
+#backup files 
+*.*~
+
+#Music files
+*.mp3
+*.aac
+*.wav
+*.m4a
+*.flac
+*.wma
+
+#Gresource prebuild file
+*/src/resources.cpp
+build/*
+build/mingw/*
+
+#gschemas file
+gschemas.compiled
+
+#backend source
+backend/*
+
+#The binary files
+FiveRow
+24game
+toml_test
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.bin
+
