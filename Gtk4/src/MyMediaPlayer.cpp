@@ -657,7 +657,7 @@ static void my_media_player_init(MyMediaPlayer *self)
     // Initalize window
     gtk_window_set_icon_name(GTK_WINDOW(self), "org.gtk.daleclack");
     gtk_window_set_title(GTK_WINDOW(self), "My Media Player");
-    gtk_window_set_default_size(GTK_WINDOW(self), 300, 270);
+    gtk_window_set_default_size(GTK_WINDOW(self), 300, 400);
     gtk_window_set_resizable(GTK_WINDOW(self), TRUE);
 
     // Check whether use dark icon name

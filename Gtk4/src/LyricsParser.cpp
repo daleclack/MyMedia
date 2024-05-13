@@ -8,7 +8,7 @@ static char *lyrics_content = NULL;
 static gboolean lyrics_loaded = FALSE;
 static gboolean line_read = FALSE, lyrics_updated = FALSE;
 static char current_lyrics[lyrics_max_length];
-static gint64 lyric_time;
+static gint64 lyric_time, priv_lyric_time;
 
 // Replace the symbol
 static void UTF8_Replace_and_Symbol(gint64 pos_and_char, char *utf8_string)
@@ -198,6 +198,7 @@ void load_lyrics(MyMediaPlayer *player)
     // Reset load status
     lyrics_updated = TRUE;
     line_read = FALSE;
+    priv_lyric_time = 0;
 
     // Reset line read starts
     get_lyrics_line(NULL, NULL, TRUE);
@@ -245,7 +246,7 @@ static void lyrics_label_update(gint64 &curr_time, MyMediaPlayer *player)
     char *color_str;
 
     // if time is on a lyrics, update the label
-    if (curr_time >= lyric_time - 100 && curr_time <= lyric_time + 100 &&
+    if (curr_time >= lyric_time - 50 && curr_time <= lyric_time + 50 &&
             line_read ||
         lyric_time == 0)
     {
