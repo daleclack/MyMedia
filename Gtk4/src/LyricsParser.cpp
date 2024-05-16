@@ -4,11 +4,11 @@
 
 #define lyrics_max_length 1024
 
-static char *lyrics_content = NULL;
-static gboolean lyrics_loaded = FALSE;
-static gboolean line_read = FALSE, lyrics_updated = FALSE;
-static char current_lyrics[lyrics_max_length];
-static gint64 lyric_time, priv_lyric_time;
+static char *lyrics_content = NULL;                        // Lyrics string content
+static gboolean lyrics_loaded = FALSE;                     // Whether the lyrics file is loaded
+static gboolean line_read = FALSE, lyrics_updated = FALSE; // For read a line of lyrics
+static char current_lyrics[lyrics_max_length];             // Current lyrics line
+static gint64 lyric_time, priv_lyric_time;                 // Time information
 
 // Replace the symbol
 static void UTF8_Replace_and_Symbol(gint64 pos_and_char, char *utf8_string)
@@ -225,7 +225,7 @@ static void lyric_line_process(char *lyrics_line,
     // Get timestamp length
     timestamp_length = get_lrc_timestamp_end_pos(lyrics_line);
 
-    // g_print("%s\n", lyrics_line);
+    g_print("%s\n", lyrics_line);
     lyric_time = get_lrc_line_timestamp(lyrics_line, timestamp_length);
 
     // Remove time stamp
@@ -273,13 +273,18 @@ static void get_lyrics(gint64 curr_time, gboolean playing, MyMediaPlayer *player
         // g_print("Lrc file load successful\n");
         if (playing && !line_read)
         {
-            // Get lyrics line
-            get_lyrics_line(lyrics_content, lyrics_line, FALSE);
+            // Skip lyric line which time duration < 100ms
+            while (lyric_time - priv_lyric_time < 100)
+            {
+                // Get lyrics line
+                get_lyrics_line(lyrics_content, lyrics_line, FALSE);
 
-            g_print("%s\n", lyrics_line);
+                // g_print("%s\n", lyrics_line);
 
-            // Process lyrics line
-            lyric_line_process(lyrics_line, timestamp_length);
+                // Process lyrics line
+                lyric_line_process(lyrics_line, timestamp_length);
+            }
+            priv_lyric_time = lyric_time;
         }
         // Try to update label
         lyrics_label_update(curr_time, player);
