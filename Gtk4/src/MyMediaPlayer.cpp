@@ -652,6 +652,38 @@ char *my_media_player_get_color(MyMediaPlayer *player)
     return color_str;
 }
 
+// Signal Handler for color button
+static void btncolor_activated(GObject *btn, GParamSpec *spec, gpointer data1)
+{
+    const GdkRGBA *color;
+
+    // Get color config
+    color = gtk_color_dialog_button_get_rgba(GTK_COLOR_DIALOG_BUTTON(btn));
+
+    // Create json data for color
+    json data = json::parse(R"(
+        {
+            "red":0.0,
+            "blue":0.0,
+            "green":0.0,
+            "alpha":0.0
+        }
+    )");
+    data["red"] = color->red;
+    data["blue"] = color->blue;
+    data["green"] = color->green;
+    data["alpha"] = color->alpha;
+
+    // Save config to json file
+    std::fstream outfile;
+    outfile.open("player.json", std::ios_base::out);
+    if (outfile.is_open())
+    {
+        outfile << data;
+    }
+    outfile.close();
+}
+
 // Initalize a color for color button
 static void btncolor_load_config(GtkWidget *btn)
 {
@@ -676,38 +708,6 @@ static void btncolor_load_config(GtkWidget *btn)
     }
 
     json_file.close();
-}
-
-// Signal Handler for color button
-static void btncolor_activated(GtkColorDialogButton *btn, gpointer data1)
-{
-    const GdkRGBA *color;
-
-    // Get color config
-    color = gtk_color_dialog_button_get_rgba(btn);
-
-    // Create json data for color
-    json data = json::parse(R"(
-        {
-            red:0.0,
-            blue:0.0,
-            green:0.0,
-            alpha:0.0
-        }
-    )");
-    data["red"] = color->red;
-    data["blue"] = color->blue;
-    data["green"] = color->green;
-    data["alpha"] = color->alpha;
-
-    // Save config to json file
-    std::fstream outfile;
-    outfile.open("player.json", std::ios_base::out);
-    if (outfile.is_open())
-    {
-        outfile << data;
-    }
-    outfile.close();
 }
 
 static void my_media_player_init(MyMediaPlayer *self)
@@ -770,7 +770,7 @@ static void my_media_player_init(MyMediaPlayer *self)
     g_signal_connect(self->btn_stop, "clicked", G_CALLBACK(btnstop_clicked), self);
     g_signal_connect(self->btn_playmode, "clicked",
                      G_CALLBACK(btn_playmode_clicked), self);
-    g_signal_connect(self->btn_color, "activate", G_CALLBACK(btncolor_activated), self);
+    g_signal_connect(self->btn_color, "notify::rgba", G_CALLBACK(btncolor_activated), self);
 
     // Create store and list view
     self->music_store = g_list_store_new(MY_ITEM_TYPE);
