@@ -227,7 +227,7 @@ static void save_playlist(std::string filename, MyMediaPlayer *player)
     outfile.close();
 }
 
-// Handler for save list dialog
+// Handler for save play list
 static void btnsave_clicked(GtkWidget *widget, MyMediaPlayer *player)
 {
     // Currently just save the playlist to a default name
@@ -657,11 +657,24 @@ static void btncolor_load_config(GtkWidget *btn)
 {
     // Open a json file
     std::fstream json_file;
-    GdkRGBA color = {};
+    json color_data;
+    GdkRGBA color;
     json_file.open("player.json", std::ios_base::in);
-    if (json_file.is_open()){
-        
+    if (json_file.is_open())
+    {
+        color_data = json::parse(json_file);
     }
+
+    if (!color_data.empty())
+    {
+        color.red = color_data["red"];
+        color.blue = color_data["blue"];
+        color.green = color_data["green"];
+        color.alpha = color_data["alpha"];
+        gtk_color_dialog_button_set_rgba(GTK_COLOR_DIALOG_BUTTON(btn),
+                                         &color);
+    }
+
     json_file.close();
 }
 
@@ -690,7 +703,8 @@ static void btncolor_activated(GtkColorDialogButton *btn, gpointer data1)
     // Save config to json file
     std::fstream outfile;
     outfile.open("player.json", std::ios_base::out);
-    if (outfile.is_open()){
+    if (outfile.is_open())
+    {
         outfile << data;
     }
     outfile.close();
