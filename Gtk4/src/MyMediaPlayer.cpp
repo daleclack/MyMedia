@@ -652,6 +652,50 @@ char *my_media_player_get_color(MyMediaPlayer *player)
     return color_str;
 }
 
+// Initalize a color for color button
+static void btncolor_load_config(GtkWidget *btn)
+{
+    // Open a json file
+    std::fstream json_file;
+    GdkRGBA color = {};
+    json_file.open("player.json", std::ios_base::in);
+    if (json_file.is_open()){
+        
+    }
+    json_file.close();
+}
+
+// Signal Handler for color button
+static void btncolor_activated(GtkColorDialogButton *btn, gpointer data1)
+{
+    const GdkRGBA *color;
+
+    // Get color config
+    color = gtk_color_dialog_button_get_rgba(btn);
+
+    // Create json data for color
+    json data = json::parse(R"(
+        {
+            red:0.0,
+            blue:0.0,
+            green:0.0,
+            alpha:0.0
+        }
+    )");
+    data["red"] = color->red;
+    data["blue"] = color->blue;
+    data["green"] = color->green;
+    data["alpha"] = color->alpha;
+
+    // Save config to json file
+    std::fstream outfile;
+    outfile.open("player.json", std::ios_base::out);
+    if (outfile.is_open()){
+        outfile << data;
+    }
+    outfile.close();
+}
+
 static void my_media_player_init(MyMediaPlayer *self)
 {
     // Initalize window
@@ -697,6 +741,7 @@ static void my_media_player_init(MyMediaPlayer *self)
     gtk_video_set_autoplay(GTK_VIDEO(self->video), FALSE);
     gtk_widget_set_hexpand(self->main_box, TRUE);
     gtk_widget_set_vexpand(self->main_box, TRUE);
+    btncolor_load_config(self->btn_color);
 
     // Link signals for buttons
     g_signal_connect(self->btn_add, "clicked", G_CALLBACK(btnadd_clicked), self);
@@ -711,6 +756,7 @@ static void my_media_player_init(MyMediaPlayer *self)
     g_signal_connect(self->btn_stop, "clicked", G_CALLBACK(btnstop_clicked), self);
     g_signal_connect(self->btn_playmode, "clicked",
                      G_CALLBACK(btn_playmode_clicked), self);
+    g_signal_connect(self->btn_color, "activate", G_CALLBACK(btncolor_activated), self);
 
     // Create store and list view
     self->music_store = g_list_store_new(MY_ITEM_TYPE);
