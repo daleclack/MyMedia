@@ -661,7 +661,7 @@ static void btncolor_activated(GObject *btn, GParamSpec *spec, gpointer data1)
     color = gtk_color_dialog_button_get_rgba(GTK_COLOR_DIALOG_BUTTON(btn));
 
     // Create json data for color
-    json data = json::parse(R"(
+    json color_data = json::parse(R"(
         {
             "red":0.0,
             "blue":0.0,
@@ -669,17 +669,17 @@ static void btncolor_activated(GObject *btn, GParamSpec *spec, gpointer data1)
             "alpha":0.0
         }
     )");
-    data["red"] = color->red;
-    data["blue"] = color->blue;
-    data["green"] = color->green;
-    data["alpha"] = color->alpha;
+    color_data["red"] = color->red;
+    color_data["blue"] = color->blue;
+    color_data["green"] = color->green;
+    color_data["alpha"] = color->alpha;
 
     // Save config to json file
     std::fstream outfile;
     outfile.open("player.json", std::ios_base::out);
     if (outfile.is_open())
     {
-        outfile << data;
+        outfile << color_data;
     }
     outfile.close();
 }
