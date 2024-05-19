@@ -324,8 +324,9 @@ static void reset_lyrics(gint64 timestamp, GtkMediaStream *stream,
     line_read = TRUE;
 
     // Show next lyrics
-    char *label_string = g_strdup_printf("<span color=\"green\" size='12pt'>%s</span>",
-                                         priv_lyrics_line);
+    char *color = my_media_player_get_color(player);
+    char *label_string = g_strdup_printf("<span color=\"%s\" size='12pt'>%s</span>",
+                                         color, priv_lyrics_line);
     gtk_label_set_markup(my_media_player_get_lyrics_widget(player),
                          label_string);
     g_free(label_string);

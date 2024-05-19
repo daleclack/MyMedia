@@ -257,7 +257,9 @@ static void load_audio(MyItem *item, MyMediaPlayer *player)
         g_object_unref(music_file);
 
         // Set the label for initial status
-        char *label_str = g_strdup_printf("<span color=\"green\" size='12pt'>%s</span>", disp_name);
+        char *color = my_media_player_get_color(player);
+        char *label_str = g_strdup_printf("<span color=\"%s\" size='12pt'>%s</span>",
+                                          color, disp_name);
         gtk_label_set_markup(GTK_LABEL(player->label_lyrics), label_str);
         g_free(label_str);
 
