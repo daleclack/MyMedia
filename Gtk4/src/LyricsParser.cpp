@@ -329,7 +329,7 @@ static void reset_lyrics(gint64 timestamp, GtkMediaStream *stream,
                                          color, priv_lyrics_line);
     gtk_label_set_markup(my_media_player_get_lyrics_widget(player),
                          label_string);
-    g_free(label_string);
+    g_free(label_string)    ;
 
     // Try to update label
     lyrics_label_update(timestamp, player);
