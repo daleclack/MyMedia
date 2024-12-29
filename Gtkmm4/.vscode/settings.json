@@ -4,6 +4,8 @@
         "string_view": "cpp",
         "__locale": "cpp",
         "string": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "filesystem": "cpp",
+        "xstring": "cpp"
     }
 }
