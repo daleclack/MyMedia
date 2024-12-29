@@ -1,5 +1,5 @@
 set(CMAKE_CXX_STANDARD 17)
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.10.0)
 project(MyMedia VERSION 3.0.0)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../GCR_CMake/macros)
@@ -17,16 +17,16 @@ include_directories(..)
 
 #Find PkgConfig to use gtkmm3
 find_package (PkgConfig REQUIRED)
-pkg_check_modules (GTK4 REQUIRED gtk4)
-include_directories (${GTK4_INCLUDE_DIRS})
-link_directories (${GTK4_LIBRARY_DIRS})
+pkg_check_modules (GTKMM REQUIRED gtkmm-4.0)
+include_directories (${GTKMM_INCLUDE_DIRS})
+link_directories (${GTKMM_LIBRARY_DIRS})
 
 #Find Gettext
 # find_package (Gettext REQUIRED)
 # set(PO_DIR ${CMAKE_BINARY_DIR}/po/zh_CN/LC_MESSAGES)
 
 #Source files
-set(SOURCE_FILE src/main.cpp src/MyMediaPlayer.cpp src/MyItem.cpp src/LyricsParser.cpp)
+set(SOURCE_FILE src/main.cc src/MyMediaPlayer.cc)
 
 #Compile Resource
 
@@ -83,12 +83,12 @@ if(WIN32)
         OBJECT_DEPENDS ${PROJECT_SOURCE_DIR}/../icon.ico
         )
 	add_executable(${PROJECT_NAME} ${app_WINRC} ${SOURCE_FILE} ${RESOURCE_FILE})
-    add_custom_command( TARGET ${PROJECT_NAME} 
+    add_custom_command(PRE_BUILD TARGET ${PROJECT_NAME} 
                         COMMAND echo * > ${CMAKE_BINARY_DIR}/.gitignore
                         COMMAND echo **/* > ${CMAKE_BINARY_DIR}/.hgignore)
 else()
 	add_executable(${PROJECT_NAME} ${SOURCE_FILE} ${RESOURCE_FILE})
-    add_custom_command( TARGET ${PROJECT_NAME}
+    add_custom_command(PRE_BUILD TARGET ${PROJECT_NAME}
                         COMMAND echo \"*\" > ${CMAKE_BINARY_DIR}/.gitignore
                         COMMAND echo \"**/*\" > ${CMAKE_BINARY_DIR}/.hgignore)   
 endif(WIN32)
@@ -98,5 +98,5 @@ endif(WIN32)
 #                     COMMAND mkdir -p ${PO_DIR}
 #                     COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} ${CMAKE_SOURCE_DIR}/po/zh_CN.po -o ${PO_DIR}/${PROJECT_NAME}.mo)
 
-SET (CMAKE_EXTRA_CXX_FLAGS ${GTK4_CFLAGS_OTHER})
-target_link_libraries (${PROJECT_NAME} ${GTK4_LIBRARIES} -lpthread)
+SET (CMAKE_EXTRA_CXX_FLAGS ${GTKMM_CFLAGS_OTHER})
+target_link_libraries (${PROJECT_NAME} ${GTKMM_LIBRARIES} -lpthread)
