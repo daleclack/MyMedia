@@ -13,7 +13,7 @@ public:
     }
     static Glib::RefPtr<MyItem> create(const Glib::ustring &file_name, const Glib::ustring &file_path)
     {
-        return Glib::RefPtr<MyItem>(new MyItem(file_name, file_path));
+        return Glib::make_refptr_for_instance<MyItem>(new MyItem(file_name, file_path));
     }
     Glib::ustring get_name() { return m_name; }
     Glib::ustring get_path() { return m_path; }
@@ -47,10 +47,12 @@ private:
     Glib::RefPtr<Gio::ListStore<MyItem>> media_list;
     Glib::RefPtr<Gtk::SingleSelection> media_selection;
     Glib::RefPtr<Gtk::SignalListItemFactory> media_factory;
+    guint current_index;
 
     // Functions for the list view
     void setup_view(const Glib::RefPtr<Gtk::ListItem>& list_item);
     void bind_view(const Glib::RefPtr<Gtk::ListItem>& list_item);
+    void item_activated(guint pos);
 
     // Signal Handlers
     void btnplay_clicked();
@@ -64,5 +66,5 @@ private:
     void btnclear_clicked();
     void btnload_clicked();
     void btnsave_clicked();
-
+    void file_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> &dialog);
 };
