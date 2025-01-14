@@ -75,6 +75,9 @@ MyMediaPlayer::MyMediaPlayer()
     expander_list.set_child(list_box);
     main_box.append(expander_list);
 
+    // Default play mode
+    current_mode = PlayMode::List_Repeat;
+
     // Connect signals
     btnprev.signal_clicked().connect(sigc::mem_fun(*this, &MyMediaPlayer::btnprev_clicked));
     btnplay.signal_clicked().connect(sigc::mem_fun(*this, &MyMediaPlayer::btnplay_clicked));
@@ -116,6 +119,7 @@ void MyMediaPlayer::bind_view(const Glib::RefPtr<Gtk::ListItem> &list_item)
 
 void MyMediaPlayer::item_activated(guint pos)
 {
+    char *color_string;
     // Check whether a media stream is playing
     auto media_stream = video.get_media_stream();
     // if has audio, stop it
@@ -128,6 +132,26 @@ void MyMediaPlayer::item_activated(guint pos)
     auto item = media_list->get_item(pos);
     video.set_filename(item->get_path());
     current_index = pos;
+
+    // Get color and add color information to the markup
+    Gdk::RGBA color = btncolor.get_rgba();
+    color_string = g_strdup_printf("#%02X%02X%02X",
+                                   color.get_red_u(),
+                                   color.get_green_u(),
+                                   color.get_blue_u());
+    Glib::ustring lyrics_str;
+    lyrics_str = Glib::ustring("<span color='");
+    lyrics_str += Glib::ustring(color_string);
+    lyrics_str += Glib::ustring("' size='12pt'>");
+    lyrics_str += item->get_name();
+    lyrics_str += Glib::ustring("</span>");
+
+    // Update lyrics label
+    label_lyrics.set_markup(lyrics_str);
+
+    // Add a timer for timer
+    timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &MyMediaPlayer::timeout_func), 100);
+    free(color_string);
 }
 
 void MyMediaPlayer::btnprev_clicked()
@@ -138,7 +162,9 @@ void MyMediaPlayer::btnprev_clicked()
     if (current_index > 0)
     {
         current_index--;
-    }else{
+    }
+    else
+    {
         current_index = n_audios - 1;
     }
 
@@ -153,10 +179,13 @@ void MyMediaPlayer::btnplay_clicked()
     auto media_stream = video.get_media_stream();
 
     // Play and pause the media
-    if (media_stream->get_playing()){
+    if (media_stream->get_playing())
+    {
         media_stream->pause();
         btnplay.set_icon_name("media-playback-start");
-    }else{
+    }
+    else
+    {
         media_stream->play();
         btnplay.set_icon_name("media-playback-pause");
     }
@@ -170,7 +199,9 @@ void MyMediaPlayer::btnnext_clicked()
     if (current_index < n_audios - 1)
     {
         current_index++;
-    }else{
+    }
+    else
+    {
         current_index = 0;
     }
 
@@ -182,7 +213,7 @@ void MyMediaPlayer::btnnext_clicked()
 void MyMediaPlayer::btnstop_clicked()
 {
     // Get the media stream to control
-    auto media_stream = video.get_media_stream();
+    // auto media_stream = video.get_media_stream();
     video.set_filename("");
     // media_stream->unrealize();
     // media_stream.reset();
@@ -190,10 +221,26 @@ void MyMediaPlayer::btnstop_clicked()
 
 void MyMediaPlayer::btnmode_clicked()
 {
-}
-
-void MyMediaPlayer::btncolor_clicked()
-{
+    // Change Play Mode
+    switch (current_mode)
+    {
+    case PlayMode::List_Once:
+        current_mode = PlayMode::List_Repeat;
+        btnmode.set_icon_name("media-playlist-repeat");
+        break;
+    case PlayMode::List_Repeat:
+        current_mode = PlayMode::List_Shuffle;
+        btnmode.set_icon_name("media-playlist-shuffle");
+        break;
+    case PlayMode::List_Shuffle:
+        current_mode = PlayMode::One_Repeat;
+        btnmode.set_icon_name("media-playlist-repeat-one");
+        break;
+    case PlayMode::One_Repeat:
+        current_mode = PlayMode::List_Once;
+        btnmode.set_icon_name("media-playlist-normal");
+        break;
+    }
 }
 
 void MyMediaPlayer::btnadd_clicked()
@@ -215,6 +262,9 @@ void MyMediaPlayer::file_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, G
         filename = file->get_basename();
         auto item = MyItem::create(filename, path);
         media_list->append(item);
+
+        // After a media add, update item numbers
+        n_media = media_list->get_n_items();
     }
     catch (const Gtk::DialogError &err)
     {
@@ -232,12 +282,93 @@ void MyMediaPlayer::btnremove_clicked()
     // Remove a item
     auto pos = media_selection->get_selected();
     media_list->remove(pos);
+
+    // After a media remove, update item numbers
+    n_media = media_list->get_n_items();
 }
 
 void MyMediaPlayer::btnclear_clicked()
 {
     // Clear all items
     media_list->remove_all();
+    n_media = 0;
+}
+
+bool MyMediaPlayer::timeout_func()
+{
+    Glib::RefPtr<MyItem> item;
+    // Get media stream status
+    auto media_stream = video.get_media_stream();
+
+    // No media stream, just skip
+    if (!media_stream)
+    {
+        return true;
+    }
+
+    // Change "Play/Pause" Button icon
+    bool media_playing = media_stream->get_playing();
+    if (media_playing)
+    {
+        btnplay.set_icon_name("media-playback-pause");
+    }
+    else
+    {
+        btnplay.set_icon_name("media-playback-start");
+    }
+
+    // Get media status
+    bool media_ended = media_stream->get_ended();
+    if (!media_ended)
+    {
+        return true;
+    }
+
+    switch (current_mode)
+    {
+    case PlayMode::List_Once:            // Play media in list once
+        if (current_index < n_media - 1) // Update media index
+        {
+            current_index++;
+        }
+
+        // Get media and play
+        item = media_list->get_item(current_index);
+        video.set_filename(item->get_path());
+        media_stream = video.get_media_stream();
+        media_stream->play();
+        break;
+    case PlayMode::List_Repeat:          // Play media in list repeat
+        if (current_index < n_media - 1) // Update media index
+        {
+            current_index++;
+        }
+        else
+        {
+            current_index = 0;
+        }
+
+        // Get media and play
+        item = media_list->get_item(current_index);
+        video.set_filename(item->get_path());
+        media_stream = video.get_media_stream();
+        media_stream->play();
+        break;
+    case PlayMode::List_Shuffle:          // Play random media in the list
+        current_index = rand() % n_media; // Update media index
+
+        // Get media and play
+        item = media_list->get_item(current_index);
+        video.set_filename(item->get_path());
+        media_stream = video.get_media_stream();
+        media_stream->play();
+        break;
+    case PlayMode::One_Repeat: // Play a media repeatly
+        media_stream->play();
+        break;
+    }
+
+    return true;
 }
 
 void MyMediaPlayer::btnload_clicked()

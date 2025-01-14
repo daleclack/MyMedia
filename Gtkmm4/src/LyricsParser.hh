@@ -1,9 +1,18 @@
 #pragma once
 
-#include "MyMediaPlayer.h"
+#include <gtkmm.h>
+#include <map>
 
-// Timeout function for music played time
-gboolean lyric_time_func(gpointer data);
+// Use map to store lyrics timestamp and lyric lines
+typedef std::map<gint64, std::string> lyrics_map;
 
-// Update lyrics file when a music will play
-void load_lyrics(MyMediaPlayer *player);
+class LyricsParser
+{
+public:
+    LyricsParser();
+    void update_lyrics(Glib::ustring &filename);
+    Glib::ustring get_lyric_line(gint64 timestamp);
+
+private:
+    Glib::ustring current_lyric_line;
+};

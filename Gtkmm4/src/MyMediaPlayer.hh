@@ -1,6 +1,16 @@
 #pragma once
 
 #include <gtkmm.h>
+#include "LyricsParser.hh"
+
+// Play mode
+enum class PlayMode
+{
+    List_Once,          // Play the media with a playlist once
+    List_Repeat,        // Play the media with a playlist repeatly
+    List_Shuffle,       // Random play a media in the playlist
+    One_Repeat          // Repeat a media file
+};
 
 // Item class for the list view
 class MyItem : public Glib::Object
@@ -47,12 +57,17 @@ private:
     Glib::RefPtr<Gio::ListStore<MyItem>> media_list;
     Glib::RefPtr<Gtk::SingleSelection> media_selection;
     Glib::RefPtr<Gtk::SignalListItemFactory> media_factory;
-    guint current_index;
+    guint current_index, n_media;
 
     // Functions for the list view
     void setup_view(const Glib::RefPtr<Gtk::ListItem>& list_item);
     void bind_view(const Glib::RefPtr<Gtk::ListItem>& list_item);
     void item_activated(guint pos);
+
+    // Media Play handler and timer
+    sigc::connection timer;
+    PlayMode current_mode;
+    bool timeout_func();
 
     // Signal Handlers
     void btnplay_clicked();
@@ -60,7 +75,6 @@ private:
     void btnnext_clicked();
     void btnstop_clicked();
     void btnmode_clicked();
-    void btncolor_clicked();
     void btnadd_clicked();
     void btnremove_clicked();
     void btnclear_clicked();

@@ -26,7 +26,7 @@ link_directories (${GTKMM_LIBRARY_DIRS})
 # set(PO_DIR ${CMAKE_BINARY_DIR}/po/zh_CN/LC_MESSAGES)
 
 #Source files
-set(SOURCE_FILE src/main.cc src/MyMediaPlayer.cc)
+set(SOURCE_FILE src/main.cc src/MyMediaPlayer.cc src/LyricsParser.cc)
 
 #Compile Resource
 
