@@ -355,15 +355,10 @@ bool MyMediaPlayer::timeout_func()
     case PlayMode::List_Once:            // Play media in list once
         if (current_index < n_media - 1) // Update media index
         {
-            current_index++;
+            current_index++; 
+            // Get media and play
+            update_audio(current_index);
         }
-
-        // Get media and play
-        update_audio(current_index);
-        // item = media_list->get_item(current_index);
-        // video.set_filename(item->get_path());
-        // media_stream = video.get_media_stream();
-        // media_stream->play();
         break;
     case PlayMode::List_Repeat:          // Play media in list repeat
         if (current_index < n_media - 1) // Update media index
@@ -377,20 +372,12 @@ bool MyMediaPlayer::timeout_func()
 
         // Get media and play
         update_audio(current_index);
-        // item = media_list->get_item(current_index);
-        // video.set_filename(item->get_path());
-        // media_stream = video.get_media_stream();
-        // media_stream->play();
         break;
     case PlayMode::List_Shuffle:          // Play random media in the list
         current_index = rand() % n_media; // Update media index
-
+        
         // Get media and play
         update_audio(current_index);
-        // item = media_list->get_item(current_index);
-        // video.set_filename(item->get_path());
-        // media_stream = video.get_media_stream();
-        // media_stream->play();
         break;
     case PlayMode::One_Repeat: // Play a media repeatly
         media_stream->play();
