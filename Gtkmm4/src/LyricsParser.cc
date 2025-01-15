@@ -68,7 +68,7 @@ void LyricsParser::lyric_line_process()
             UTF8_String_Fix(lyrics_buffer);
             lyric_lines.push_back(lyrics_buffer.c_str());
             n_lyric_lines++;
-            std::cout << timestamp << " " << lyrics_buffer << std::endl;
+            // std::cout << timestamp << " " << lyrics_buffer << std::endl;
         }
     }
 }
