@@ -50,26 +50,38 @@ void LyricsParser::lyric_line_process()
     std::string item;
     while (std::getline(ss, item))
     {
-        // Split the time and lyrics into two parts
-        size_t pos1 = item.find('[');
-        size_t pos2 = item.find(']');
-        if (pos1 != std::string::npos && pos2 != std::string::npos)
-        {
-            // Store the timestamps into a vector
-            std::string time_str = item.substr(pos1 + 1, pos2 - 1);
-            gint64 timestamp = get_lyric_timestamp(time_str);
-            if (timestamp != -1)
-            {
-                lyric_timestamps.push_back(timestamp);
-            }
+        lyric_line_get_time(item);
+    }
+}
 
-            // Store the lyrics line into a vector
-            std::string lyrics_buffer = item.substr(pos2 + 1);
-            UTF8_String_Fix(lyrics_buffer);
-            lyric_lines.push_back(lyrics_buffer.c_str());
-            n_lyric_lines++;
-            // std::cout << timestamp << " " << lyrics_buffer << std::endl;
+void LyricsParser::lyric_line_get_time(std::string &lyric_line_str)
+{
+    // Split the time and lyrics into two parts
+    size_t pos1 = lyric_line_str.find('[');
+    size_t pos2 = lyric_line_str.find(']');
+    if (pos1 != std::string::npos && pos2 != std::string::npos)
+    {
+        // Store the timestamps into a vector
+        std::string time_str = lyric_line_str.substr(pos1 + 1, pos2 - 1);
+        gint64 timestamp = get_lyric_timestamp(time_str);
+        if (timestamp != -1)
+        {
+            lyric_timestamps.push_back(timestamp);
         }
+
+        // Try to check whether all timestamps are converted
+        std::string lyrics_line_buffer = lyric_line_str.substr(pos2 + 1);
+        lyric_line_get_time(lyrics_line_buffer);
+
+        // Store the lyrics line into a vector
+        size_t pos3 = lyric_line_str.rfind(']');
+        std::string lyrics_buffer = lyric_line_str.substr(pos3 + 1);
+        UTF8_String_Fix(lyrics_buffer);
+        lyric_lines.push_back(lyrics_buffer.c_str());
+        n_lyric_lines++;
+        // std::cout << timestamp << " " << lyrics_buffer << std::endl;
+    }else{
+        return;
     }
 }
 
@@ -77,6 +89,13 @@ gint64 LyricsParser::get_lyric_timestamp(const std::string &line)
 {
     gint64 lyric_timestamp = 0;
     gint64 lyric_minutes, lyric_seconds, lyric_milliseconds;
+
+    // Add "-1" timestamp for other information
+    if (line[0] > '9' && line[0] < '0')
+    {
+        return -1;
+    }
+
     // Minutes
     lyric_minutes = (line[0] - '0') * 10 + line[1] - '0';
 
@@ -99,7 +118,7 @@ Glib::ustring LyricsParser::get_lyric_line(gint64 timestamp)
     for (size_t i = 0; i < lyric_timestamps.size(); i++)
     {
         /* code */
-        if (timestamp >= lyric_timestamps[i] - 200 && timestamp < lyric_timestamps[i] + 200)
+        if (timestamp >= lyric_timestamps[i] - 100 && timestamp < lyric_timestamps[i] + 200)
         {
             lyric_buffer = lyric_lines[i];
             break;

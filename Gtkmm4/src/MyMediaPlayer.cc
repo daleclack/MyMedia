@@ -1,5 +1,6 @@
 #include "MyMediaPlayer.hh"
 #include <iostream>
+#include <string_view>
 
 MyMediaPlayer::MyMediaPlayer()
     : main_box(Gtk::Orientation::VERTICAL, 5),
@@ -18,7 +19,9 @@ MyMediaPlayer::MyMediaPlayer()
     main_box.append(video);
     label_lyrics.set_use_markup(true);
     label_lyrics.set_markup("<span color='red' size='12pt'>No Media Playing...</span>");
-    main_box.append(label_lyrics);
+    lyrics_area.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::NEVER);
+    lyrics_area.set_child(label_lyrics);
+    main_box.append(lyrics_area);
 
     // Create color dialog
     color_dialog = Gtk::ColorDialog::create();
@@ -77,6 +80,9 @@ MyMediaPlayer::MyMediaPlayer()
 
     // Default play mode
     current_mode = PlayMode::List_Repeat;
+
+    // Load a new playlist
+    load_playlist("Playlist.toml");
 
     // Connect signals
     btnprev.signal_clicked().connect(sigc::mem_fun(*this, &MyMediaPlayer::btnprev_clicked));
@@ -263,10 +269,134 @@ void MyMediaPlayer::btnadd_clicked()
     // Create a dialog and open it
     auto dialog = Gtk::FileDialog::create();
     dialog->set_title("Open a media file");
-    dialog->open(sigc::bind(sigc::mem_fun(*this, &MyMediaPlayer::file_dialog_finish), dialog));
+    dialog->open(sigc::bind(sigc::mem_fun(*this, &MyMediaPlayer::openfile_dialog_finish), dialog));
 }
 
-void MyMediaPlayer::file_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> &dialog)
+void MyMediaPlayer::btnload_clicked()
+{
+    // Create a dialog to open a toml file
+    auto dialog = Gtk::FileDialog::create();
+    dialog->set_title("Open a playlist file");
+
+    // Add file filter
+    auto filters = Gio::ListStore<Gtk::FileFilter>::create();
+    auto filter = Gtk::FileFilter::create();
+    filter->add_pattern("*.toml");
+    filters->append(filter);
+
+    dialog->set_filters(filters);
+
+    // Open the dialog
+    dialog->open(sigc::bind(sigc::mem_fun(*this, &MyMediaPlayer::openlist_dialog_finish), dialog));
+}
+
+void MyMediaPlayer::btnsave_clicked()
+{
+    // Create a dialog to open a toml file
+    auto dialog = Gtk::FileDialog::create();
+    dialog->set_title("Save the playlist");
+
+    // Add file filter
+    auto filters = Gio::ListStore<Gtk::FileFilter>::create();
+    auto filter = Gtk::FileFilter::create();
+    filter->add_pattern("*.toml");
+    filters->append(filter);
+
+    dialog->set_filters(filters);
+
+    // Open the dialog
+    dialog->save(sigc::bind(sigc::mem_fun(*this, &MyMediaPlayer::savelist_dialog_finish), dialog));
+}
+
+void MyMediaPlayer::btnremove_clicked()
+{
+    // Remove a item
+    auto pos = media_selection->get_selected();
+    media_list->remove(pos);
+
+    // After a media remove, update item numbers
+    n_media = media_list->get_n_items();
+
+    // Update saved playlist
+    save_playlist("Playlist.toml");
+}
+
+void MyMediaPlayer::btnclear_clicked()
+{
+    // Clear all items
+    media_list->remove_all();
+    n_media = 0;
+
+    // Update saved playlist
+    save_playlist("Playlist.toml");
+}
+
+void MyMediaPlayer::load_playlist(const std::string &filename)
+{
+    std::fstream infile;
+    infile.open(filename, std::ios_base::in);
+    if (!infile.is_open()){
+        return;
+    }
+    infile.close();
+
+    auto config = toml::parse_file(filename);
+    if (config.contains("names") && config.contains("paths"))
+    {
+        // Clear previous list
+        if (media_list->get_n_items() > 0)
+        {
+            media_list->remove_all();
+        }
+
+        // Load name and path array from the playlist file
+        auto names = *(config.get_as<toml::array>("names"));
+        auto paths = *(config.get_as<toml::array>("paths"));
+
+        // Update list
+        for (size_t i = 0; i < names.size(); i++)
+        {
+            std::optional<std::string> name1 = names[i].value<std::string>();
+            std::optional<std::string> path1 = paths[i].value<std::string>();
+            media_list->append(MyItem::create(name1.value(), path1.value()));
+        }
+    }
+}
+
+void MyMediaPlayer::save_playlist(const std::string &filename)
+{
+    // Create toml object
+    static constexpr std::string_view source = R"(
+        paths = []
+        names = []
+    )";
+
+    toml::table tbl = toml::parse(source);
+    toml::array names, paths;
+
+    // Get content from the list
+    for (int i = 0; i < n_media; i++)
+    {
+        auto item = media_list->get_item(i);
+        names.push_back(std::string(item->get_name()));
+        paths.push_back(std::string(item->get_path()));
+    }
+
+    // Save the content to toml file
+    tbl.insert_or_assign("names", names);
+    tbl.insert_or_assign("paths", paths);
+
+    // Save the data to file
+    std::fstream outfile;
+    outfile.open(filename, std::ios_base::out);
+    if (outfile.is_open())
+    {
+        outfile << tbl;
+    }
+    outfile.close();
+}
+
+void MyMediaPlayer::openfile_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> &dialog)
 {
     try
     {
@@ -280,6 +410,10 @@ void MyMediaPlayer::file_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, G
 
         // After a media add, update item numbers
         n_media = media_list->get_n_items();
+
+        // Update saved playlist
+        save_playlist("Playlist.toml");
+        file.reset();
     }
     catch (const Gtk::DialogError &err)
     {
@@ -292,21 +426,51 @@ void MyMediaPlayer::file_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, G
     }
 }
 
-void MyMediaPlayer::btnremove_clicked()
+void MyMediaPlayer::savelist_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> &dialog)
 {
-    // Remove a item
-    auto pos = media_selection->get_selected();
-    media_list->remove(pos);
+    try
+    {
+        // Get filename
+        auto file = dialog->save_finish(result);
+        std::string path = file->get_path();
 
-    // After a media remove, update item numbers
-    n_media = media_list->get_n_items();
+        // Save current playlist to a path
+        save_playlist(path);
+    }
+    catch (const Gtk::DialogError &err)
+    {
+        // Can be thrown by dialog->open_finish(result).
+        std::cout << "No file selected. " << err.what() << std::endl;
+    }
+    catch (const Glib::Error &err)
+    {
+        std::cout << "Unexpected exception. " << err.what() << std::endl;
+    }
 }
 
-void MyMediaPlayer::btnclear_clicked()
+void MyMediaPlayer::openlist_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> &dialog)
 {
-    // Clear all items
-    media_list->remove_all();
-    n_media = 0;
+    try
+    {
+        // Get filename
+        auto file = dialog->open_finish(result);
+        std::string path = file->get_path();
+
+        // Load a new playlist
+        load_playlist(path);
+
+        // Save current playlist
+        save_playlist("Playlist.toml");
+    }
+    catch (const Gtk::DialogError &err)
+    {
+        // Can be thrown by dialog->open_finish(result).
+        std::cout << "No file selected. " << err.what() << std::endl;
+    }
+    catch (const Glib::Error &err)
+    {
+        std::cout << "Unexpected exception. " << err.what() << std::endl;
+    }
 }
 
 bool MyMediaPlayer::timeout_func()
@@ -385,12 +549,4 @@ bool MyMediaPlayer::timeout_func()
     }
 
     return true;
-}
-
-void MyMediaPlayer::btnload_clicked()
-{
-}
-
-void MyMediaPlayer::btnsave_clicked()
-{
 }

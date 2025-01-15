@@ -2,6 +2,7 @@
 
 #include <gtkmm.h>
 #include "LyricsParser.hh"
+#include "../tomlplusplus/toml.hpp"
 
 // Play mode
 enum class PlayMode
@@ -41,14 +42,16 @@ public:
     virtual ~MyMediaPlayer();
 
 private:
-    // Child widgets
+    // Media Controls area
     Gtk::Video video;
     Gtk::Box main_box, ctrl_box;
     Gtk::Button btnplay, btnprev, btnnext, btnstop, btnmode;
+    Gtk::ScrolledWindow lyrics_area;
     Gtk::Label label_lyrics;
     Gtk::ColorDialogButton btncolor;
     Glib::RefPtr<Gtk::ColorDialog> color_dialog;
 
+    // The Playlist area
     Gtk::Expander expander_list;
     Gtk::Box list_box, ctrl_box2;
     Gtk::ListView list_view;
@@ -74,6 +77,10 @@ private:
     void update_lyrics_label(const Glib::ustring &lyrics_string);
     void update_audio(guint index);
 
+    // The Playlist controls
+    void save_playlist(const std::string &filename);
+    void load_playlist(const std::string &filename);
+
     // Signal Handlers
     void btnplay_clicked();
     void btnprev_clicked();
@@ -85,5 +92,7 @@ private:
     void btnclear_clicked();
     void btnload_clicked();
     void btnsave_clicked();
-    void file_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> &dialog);
+    void openfile_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> &dialog);
+    void savelist_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> &dialog);
+    void openlist_dialog_finish(Glib::RefPtr<Gio::AsyncResult> &result, Glib::RefPtr<Gtk::FileDialog> &dialog);
 };

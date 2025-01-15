@@ -33,6 +33,7 @@ private:
 
     // Useful functions
     void lyric_line_process();
+    void lyric_line_get_time(std::string &lyric_line_str);
     gint64 get_lyric_timestamp(const std::string &line);
     void UTF8_String_Fix(std::string &str);
 };
