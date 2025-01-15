@@ -8,6 +8,7 @@ LyricsParser::LyricsParser()
 
 void LyricsParser::UTF8_String_Fix(std::string &str)
 {
+    // Replace & with &amp; in the string
     for (int i = 0; i < str.length(); i++)
     {
         if (str[i] == '&')
