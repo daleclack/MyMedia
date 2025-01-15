@@ -119,7 +119,6 @@ void MyMediaPlayer::bind_view(const Glib::RefPtr<Gtk::ListItem> &list_item)
 
 void MyMediaPlayer::item_activated(guint pos)
 {
-    char *color_string;
     // Check whether a media stream is playing
     auto media_stream = video.get_media_stream();
     // if has audio, stop it
@@ -128,29 +127,45 @@ void MyMediaPlayer::item_activated(guint pos)
         btnstop_clicked();
     }
 
-    // Get the pos of media file and play
-    auto item = media_list->get_item(pos);
-    video.set_filename(item->get_path());
+    // Update the audio
+    update_audio(pos);
     current_index = pos;
 
+    // Add a timer for timer
+    timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &MyMediaPlayer::timeout_func), 100);
+}
+
+void MyMediaPlayer::update_audio(guint index)
+{
+    // Get the pos of media file and play
+    auto item = media_list->get_item(index);
+    video.set_filename(item->get_path());
+
+    // Update lyrics label
+    update_lyrics_label(item->get_name());
+    lyrics_parser.update_lyrics(item->get_path());
+}
+
+void MyMediaPlayer::update_lyrics_label(const Glib::ustring &lyrics_string)
+{
+    char *color_string;
     // Get color and add color information to the markup
     Gdk::RGBA color = btncolor.get_rgba();
     color_string = g_strdup_printf("#%02X%02X%02X",
                                    color.get_red_u(),
                                    color.get_green_u(),
                                    color.get_blue_u());
+
     Glib::ustring lyrics_str;
     lyrics_str = Glib::ustring("<span color='");
     lyrics_str += Glib::ustring(color_string);
     lyrics_str += Glib::ustring("' size='12pt'>");
-    lyrics_str += item->get_name();
+    lyrics_str += lyrics_string;
     lyrics_str += Glib::ustring("</span>");
 
     // Update lyrics label
     label_lyrics.set_markup(lyrics_str);
 
-    // Add a timer for timer
-    timer = Glib::signal_timeout().connect(sigc::mem_fun(*this, &MyMediaPlayer::timeout_func), 100);
     free(color_string);
 }
 
@@ -317,6 +332,17 @@ bool MyMediaPlayer::timeout_func()
         btnplay.set_icon_name("media-playback-start");
     }
 
+    // Update Current Lyrics
+    gint64 current_time = media_stream->get_timestamp();
+    gint64 timestamp_ms = current_time / 1000;
+    Glib::ustring current_lyric = lyrics_parser.get_lyric_line(timestamp_ms);
+    if (!current_lyric.empty() || current_lyric == " ")
+    {
+        update_lyrics_label(current_lyric);
+    }
+
+    // std::cout << "Current lyrics: " << current_lyric << std::endl;
+
     // Get media status
     bool media_ended = media_stream->get_ended();
     if (!media_ended)
@@ -333,10 +359,11 @@ bool MyMediaPlayer::timeout_func()
         }
 
         // Get media and play
-        item = media_list->get_item(current_index);
-        video.set_filename(item->get_path());
-        media_stream = video.get_media_stream();
-        media_stream->play();
+        update_audio(current_index);
+        // item = media_list->get_item(current_index);
+        // video.set_filename(item->get_path());
+        // media_stream = video.get_media_stream();
+        // media_stream->play();
         break;
     case PlayMode::List_Repeat:          // Play media in list repeat
         if (current_index < n_media - 1) // Update media index
@@ -349,19 +376,21 @@ bool MyMediaPlayer::timeout_func()
         }
 
         // Get media and play
-        item = media_list->get_item(current_index);
-        video.set_filename(item->get_path());
-        media_stream = video.get_media_stream();
-        media_stream->play();
+        update_audio(current_index);
+        // item = media_list->get_item(current_index);
+        // video.set_filename(item->get_path());
+        // media_stream = video.get_media_stream();
+        // media_stream->play();
         break;
     case PlayMode::List_Shuffle:          // Play random media in the list
         current_index = rand() % n_media; // Update media index
 
         // Get media and play
-        item = media_list->get_item(current_index);
-        video.set_filename(item->get_path());
-        media_stream = video.get_media_stream();
-        media_stream->play();
+        update_audio(current_index);
+        // item = media_list->get_item(current_index);
+        // video.set_filename(item->get_path());
+        // media_stream = video.get_media_stream();
+        // media_stream->play();
         break;
     case PlayMode::One_Repeat: // Play a media repeatly
         media_stream->play();

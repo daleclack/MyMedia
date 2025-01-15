@@ -6,6 +6,8 @@
         "string": "cpp",
         "*.ipp": "cpp",
         "filesystem": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp"
     }
 }

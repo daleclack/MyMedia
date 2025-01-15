@@ -69,6 +69,11 @@ private:
     PlayMode current_mode;
     bool timeout_func();
 
+    // Lyrics handler
+    LyricsParser lyrics_parser;
+    void update_lyrics_label(const Glib::ustring &lyrics_string);
+    void update_audio(guint index);
+
     // Signal Handlers
     void btnplay_clicked();
     void btnprev_clicked();
