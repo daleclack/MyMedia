@@ -21,6 +21,11 @@ void LyricsParser::UTF8_String_Fix(std::string &str)
 bool LyricsParser::update_lyrics(const Glib::ustring &filename)
 {
     char line_buffer[1024];
+    
+    // Clear previous lyrics
+    lyric_timestamps.clear();
+    lyric_lines.clear();
+
     // Process file name for lyrics file
     lrc_filename = filename.substr(0, filename.find_last_of('.')) + ".lrc";
 
@@ -39,10 +44,6 @@ bool LyricsParser::update_lyrics(const Glib::ustring &filename)
 
 void LyricsParser::lyric_line_process()
 {
-    // Clear previous lyrics
-    lyric_timestamps.clear();
-    lyric_lines.clear();
-
     lrc_content_buffer = Glib::ustring(lyric_file_contents);
 
     // Use string stream to split the lyrics file into lines

@@ -150,6 +150,9 @@ void MyMediaPlayer::update_audio(guint index)
     // Update lyrics label
     update_lyrics_label(item->get_name());
     lyrics_parser.update_lyrics(item->get_path());
+
+    // Update selection
+    media_selection->set_selected(index);
 }
 
 void MyMediaPlayer::update_lyrics_label(const Glib::ustring &lyrics_string)
@@ -190,14 +193,20 @@ void MyMediaPlayer::btnprev_clicked()
     }
 
     // Get the filename and play
-    auto item = media_list->get_item(current_index);
-    video.set_filename(item->get_path());
+    update_audio(current_index);
+    // auto item = media_list->get_item(current_index);
+    // video.set_filename(item->get_path());
 }
 
 void MyMediaPlayer::btnplay_clicked()
 {
     // Get the media stream to control
     auto media_stream = video.get_media_stream();
+
+    if (!media_stream)
+    {
+        return;
+    }
 
     // Play and pause the media
     if (media_stream->get_playing())
@@ -227,8 +236,9 @@ void MyMediaPlayer::btnnext_clicked()
     }
 
     // Get the filename and play
-    auto item = media_list->get_item(current_index);
-    video.set_filename(item->get_path());
+    update_audio(current_index);
+    // auto item = media_list->get_item(current_index);
+    // video.set_filename(item->get_path());
 }
 
 void MyMediaPlayer::btnstop_clicked()
@@ -360,6 +370,9 @@ void MyMediaPlayer::load_playlist(const std::string &filename)
             std::optional<std::string> path1 = paths[i].value<std::string>();
             media_list->append(MyItem::create(name1.value(), path1.value()));
         }
+
+        // Update media quantity
+        n_media = media_list->get_n_items();
     }
 }
 
@@ -520,6 +533,7 @@ bool MyMediaPlayer::timeout_func()
         if (current_index < n_media - 1) // Update media index
         {
             current_index++; 
+
             // Get media and play
             update_audio(current_index);
         }
@@ -533,6 +547,7 @@ bool MyMediaPlayer::timeout_func()
         {
             current_index = 0;
         }
+        // std::cout << current_index << " " << n_media;
 
         // Get media and play
         update_audio(current_index);
