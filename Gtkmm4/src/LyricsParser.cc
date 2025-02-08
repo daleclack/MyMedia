@@ -21,7 +21,7 @@ void LyricsParser::UTF8_String_Fix(std::string &str)
 bool LyricsParser::update_lyrics(const Glib::ustring &filename)
 {
     char line_buffer[1024];
-    
+
     // Clear previous lyrics
     lyric_timestamps.clear();
     lyric_lines.clear();
@@ -81,7 +81,9 @@ void LyricsParser::lyric_line_get_time(std::string &lyric_line_str)
         lyric_lines.push_back(lyrics_buffer.c_str());
         n_lyric_lines++;
         // std::cout << timestamp << " " << lyrics_buffer << std::endl;
-    }else{
+    }
+    else
+    {
         return;
     }
 }
@@ -103,8 +105,13 @@ gint64 LyricsParser::get_lyric_timestamp(const std::string &line)
     // Seconds
     lyric_seconds = (line[3] - '0') * 10 + line[4] - '0';
 
-    // Milliseconds
-    lyric_milliseconds = (line[6] - '0') * 100 + (line[7] - '0') * 10;
+    // Process for lyrics without milliseconds
+    lyric_milliseconds = 0;
+    if (line.length() >= 8)
+    {
+        // Milliseconds
+        lyric_milliseconds = (line[6] - '0') * 100 + (line[7] - '0') * 10;
+    }
 
     lyric_timestamp = lyric_minutes * 60 * 1000 + lyric_seconds * 1000 + lyric_milliseconds;
 
